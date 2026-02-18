@@ -1,0 +1,7 @@
+// helpers/avatar.ts
+const _defaultAvatar = '/assets/anonymous_128.png'
+
+export const getAvatar = (url: string | undefined) => {
+  if (url) return url
+  return _defaultAvatar
+}

@@ -1,0 +1,280 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme((color: (primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    ));
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+}
+
+/* You can add global styles to this file, and also import other style files */
+// *,
+// *::before,
+// *::after {
+//   box-sizing: border-box;
+// }
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+// 3D Retro Buttons Styles
+.retro-buttons-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 4rem 0;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+
+  .buttons-grid {
+    width: 100%;
+    max-width: 800px;
+  }
+}
+
+.wrapper {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.header-wrap {
+  text-align: center;
+  margin-bottom: 2rem;
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    color: #2d2d2d;
+    text-transform: uppercase;
+  }
+}
+
+.retro-btn {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  outline: none;
+  border: 0;
+  vertical-align: middle;
+  text-decoration: none;
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  
+  &.lg {
+    .btn {
+      width: 200px;
+      height: 60px;
+    }
+    .btn-content-inner::before {
+      font-size: 1.2rem;
+    }
+  }
+  
+  &.sm {
+    .btn {
+      width: 100px;
+      height: 40px;
+    }
+    .btn-content-inner::before {
+      font-size: 0.8rem;
+    }
+  }
+
+  .btn {
+    position: relative;
+    display: block;
+    width: 150px;
+    height: 50px;
+    background: #2d2d2d;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      transform: translateY(4px);
+      z-index: -1;
+    }
+  }
+
+  .btn-inner {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #444;
+    border-radius: 8px;
+    transform: translateY(-4px);
+    transition: all 0.2s ease;
+  }
+
+  .content-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .btn-content {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-content-inner {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+
+    &::before {
+      content: attr(label);
+    }
+
+    &:empty::before {
+      content: none;
+    }
+  }
+
+  // Hover & Active States
+  &:hover {
+    .btn-inner {
+      transform: translateY(-6px);
+      background: #555;
+    }
+  }
+
+  &:active {
+    .btn-inner {
+      transform: translateY(0);
+    }
+  }
+
+  // Color Variants
+  &.primary {
+    .btn { background: #3448c5; }
+    .btn-inner { background: #4a5ed9; }
+    &:hover .btn-inner { background: #5c6ef2; }
+  }
+
+  &.secondary {
+    .btn { background: #6c757d; }
+    .btn-inner { background: #868e96; }
+    &:hover .btn-inner { background: #9da5ac; }
+  }
+
+  &.danger {
+    .btn { background: #d32f2f; }
+    .btn-inner { background: #f44336; }
+    &:hover .btn-inner { background: #ff5252; }
+  }
+
+  &.warning {
+    .btn { background: #ffa000; }
+    .btn-inner { background: #ffc107; }
+    &:hover .btn-inner { background: #ffd740; }
+  }
+
+  &.success {
+    .btn { background: #388e3c; }
+    .btn-inner { background: #4caf50; }
+    &:hover .btn-inner { background: #66bb6a; }
+  }
+
+  &.info {
+    .btn { background: #1976d2; }
+    .btn-inner { background: #2196f3; }
+    &:hover .btn-inner { background: #42a5f5; }
+  }
+}
+
+.loader-button {
+  background: #2d2d2d;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #444;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: all 0.5s ease;
+  }
+
+  &:active::after {
+    left: 100%;
+  }
+}

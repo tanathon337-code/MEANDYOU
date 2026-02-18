@@ -1,0 +1,375 @@
+<div class="missions-container">
+  <div class="interactive-controls">
+    <div class="background-controls">
+      <button class="background-icon-button" (click)="toggleBgSelector()">
+        <span class="material-icons">image</span>
+      </button>
+
+      <div class="background-selector-row" [class.active]="showBgSelector">
+        @for (scheme of schemes; track $index) {
+          <button class="background-thumb preset" (click)="setScheme($index)">
+            @for (color of scheme; track color) {
+              <span class="thumb-color" [style.background]="color"></span>
+            }
+          </button>
+        }
+        <button class="background-thumb advanced" (click)="toggleAdjuster()">
+          <span class="material-icons">tune</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="color-adjuster-panel" [class.active]="showAdjuster"> 
+      <div class="color-adjuster-header"> 
+        <h3 class="color-adjuster-title">Color Adjuster</h3> 
+        <button class="color-adjuster-close" (click)="toggleAdjuster()">×</button> 
+      </div> 
+
+      @for (color of colors; track $index) {
+        <div class="color-picker-group"> 
+          <div class="color-picker-label"> 
+            <span>Color {{ $index + 1 }}</span> 
+          </div> 
+          <div class="color-picker-wrapper"> 
+            <input type="color" class="color-picker-input" [value]="color" (input)="updateColor($index, $event)"> 
+            <input type="text" class="color-value-display" [value]="color" readonly> 
+            <button class="copy-btn" (click)="copyToClipboard(color)">Copy</button> 
+          </div> 
+        </div> 
+      }
+
+      <div class="color-adjuster-actions"> 
+        <button class="export-btn" (click)="exportColors()">Export All Colors</button> 
+      </div> 
+    </div>
+  </div>
+
+  @if (viewMode === 'my') {
+    <div class="header-section">
+      <div class='wrapper' (click)="toggleCreateForm()">
+        <div role='button' [class]="'retro-btn sm ' + (showCreateForm ? 'danger' : 'primary')">
+          <a class='btn'>
+            <span class='btn-inner'>
+              <span class='content-wrapper'>
+                <span class='btn-content'>
+                  <span class='btn-content-inner'>{{ showCreateForm ? 'Cancel' : 'Create' }}</span>
+                </span>
+              </span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    @if (showCreateForm) {
+      <div class="create-mission-card">
+        <h2>สร้างภารกิจใหม่</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>ชื่อภารกิจ</label>
+            <input type="text" [(ngModel)]="newMission.name" placeholder="ระบุชื่อภารกิจ">
+          </div>
+          <div class="form-group">
+            <label>อีเมลติดต่อ</label>
+            <input type="email" [(ngModel)]="newMission.email" placeholder="example@mail.com">
+          </div>
+          <div class="form-group">
+            <label>เบอร์โทรศัพท์</label>
+            <input type="text" [(ngModel)]="newMission.phone" placeholder="08x-xxx-xxxx">
+          </div>
+          <div class="form-group">
+            <label>วันที่จัดภารกิจ</label>
+            <input type="date" [(ngModel)]="newMission.mission_date">
+          </div>
+          <div class="form-group">
+            <label>Number of Crew</label>
+            <input type="number" min="1" [(ngModel)]="newMission.max_crew" placeholder="เช่น 5">
+          </div>
+          <div class="form-group full-width">
+            <label>สถานที่</label>
+            <input type="text" [(ngModel)]="newMission.location" placeholder="ระบุสถานที่ตั้ง">
+          </div>
+          <div class="form-group full-width">
+            <label>รายละเอียดภารกิจ</label>
+            <textarea [(ngModel)]="newMission.description" placeholder="อธิบายรายละเอียดของภารกิจ..."></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>เลือกรางวัลที่ได้รับ</label>
+            <div class="rewards-selection">
+              @for (reward of availableRewards; track reward) {
+                <div 
+                  class="reward-option" 
+                  [class.selected]="newMission.rewards?.includes(reward)"
+                  (click)="toggleReward(reward)"
+                >
+                  <span class="material-icons">
+                    {{ newMission.rewards?.includes(reward) ? 'check_box' : 'check_box_outline_blank' }}
+                  </span>
+                  {{ reward }}
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <div class='wrapper' (click)="addMission()">
+            <div role='button' class='retro-btn primary'>
+              <a class='btn'>
+                <span class='btn-inner'>
+                  <span class='content-wrapper'>
+                    <span class='btn-content'>
+                      <span class='btn-content-inner'>บันทึกภารกิจ</span>
+                    </span>
+                  </span>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <div class="filter-section">
+    <div class="filter-box">
+      <div class="search-box">
+        <label for="search">Search</label>
+        <div class="search-input-group">
+          <input 
+            type="text" 
+            id="search"
+            [(ngModel)]="searchTerm" 
+            (input)="onSearchChange()"
+            placeholder="Mission Name"
+            class="search-input"
+          >
+          <div class='wrapper' (click)="onSubmit()">
+            <div role='button' class='retro-btn sm success'>
+              <a class='btn'>
+                <span class='btn-inner'>
+                  <span class='content-wrapper'>
+                    <span class='btn-content'>
+                      <span class='btn-content-inner'>Go</span>
+                    </span>
+                  </span>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-box">
+        <label for="status">Status</label>
+        <select 
+          id="status"
+          [(ngModel)]="statusFilter" 
+          (change)="filterMissions()"
+          class="status-select"
+        >
+          <option value="">All Status</option>
+          <option value="Open">Open</option>
+          <option value="InProgress">InProgress</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  @if(errorMsg) {
+    <div class="error-message">
+      <p>{{ errorMsg }}</p>
+    </div>
+  }
+
+  @if(isLoading) {
+    <div class="loading">
+      <p>Loading missions...</p>
+    </div>
+  } @else if(filteredMissions.length > 0) {
+    <div class="missions-table-wrapper">
+      <table class="missions-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Mission Date</th>
+            <th>Chief</th>
+            <th>Number of Crew</th>
+            <th>Status</th>
+            <th>Created at</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (mission of filteredMissions; track mission.id) {
+            <tr [ngClass]="'status-' + mission.status" [class.expanded]="expandedMissionId === mission.id">
+              <td class="name-cell">{{ mission.name }}</td>
+              <td class="description-cell">{{ mission.description }}</td>
+              <td class="date-cell">{{ mission.mission_date | date: 'dd MMM yyyy' }}</td>
+              <td class="Chief-cell">{{ mission.chief }}</td>
+              <td class="crew-cell">
+                {{ mission.crew_count }} / {{ mission.max_crew || '-' }}
+              </td>
+              <td class="status-cell">
+                <span class="status-badge" [ngClass]="'badge-' + mission.status">
+                  {{ mission.status }}
+                </span>
+              </td>
+              <td class="date-cell">{{ mission.created_at | date: 'short' }}</td>
+              <td class="action-cell">
+                <div class="action-buttons">
+                  @if (mission.status === 'Open' && mission.allow_join !== false) {
+                    <div class='wrapper' (click)="joinMission(mission)">
+                      <div role='button' class='retro-btn sm primary'>
+                        <a class='btn'>
+                          <span class='btn-inner'>
+                            <span class='content-wrapper'>
+                              <span class='btn-content'>
+                                <span class='btn-content-inner'>Join</span>
+                              </span>
+                            </span>
+                          </span>
+                        </a>
+                      </div>
+                    </div>
+                  } @else if (mission.status === 'Completed' && mission.chief === currentUserName) {
+                    <div class='wrapper' (click)="finishMission(mission)">
+                      <div role='button' class='retro-btn sm success'>
+                        <a class='btn'>
+                          <span class='btn-inner'>
+                            <span class='content-wrapper'>
+                              <span class='btn-content'>
+                                <span class='btn-content-inner'>Finish</span>
+                              </span>
+                            </span>
+                          </span>
+                        </a>
+                      </div>
+                    </div>
+                  } 
+                  
+                  @if (mission.status === 'InProgress') {
+                    <div class='wrapper' (click)="cancelMission(mission)">
+                      <div role='button' class='retro-btn sm danger'>
+                        <a class='btn'>
+                          <span class='btn-inner'>
+                            <span class='content-wrapper'>
+                              <span class='btn-content'>
+                                <span class='btn-content-inner'>Cancel</span>
+                              </span>
+                            </span>
+                          </span>
+                        </a>
+                      </div>
+                    </div>
+                  }
+
+                  <div class='wrapper' (click)="viewDetail(mission)">
+                    <div role='button' class='retro-btn sm info'>
+                      <a class='btn'>
+                        <span class='btn-inner'>
+                          <span class='content-wrapper'>
+                            <span class='btn-content'>
+                              <span class='btn-content-inner'>Detail</span>
+                            </span>
+                          </span>
+                        </span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            @if (expandedMissionId === mission.id) {
+              <tr class="detail-row">
+                <td colspan="8">
+                  <div class="mission-detail-content">
+                    <div class="detail-grid">
+                      <div class="detail-info">
+                        <h4>Contact Information</h4>
+                        <div class="detail-item">
+                          <span class="material-icons">event</span>
+                          <span class="label">Mission Date:</span>
+                          <span class="value">{{ mission.mission_date | date: 'fullDate' }}</span>
+                        </div>
+                        <div class="detail-item">
+                          <span class="material-icons">email</span>
+                          <span class="label">Email:</span>
+                          <span class="value">{{ mission.email }}</span>
+                        </div>
+                        <div class="detail-item">
+                          <span class="material-icons">phone</span>
+                          <span class="label">Phone:</span>
+                          <span class="value">{{ mission.phone }}</span>
+                        </div>
+                        <div class="detail-item">
+                          <span class="material-icons">location_on</span>
+                          <span class="label">Location:</span>
+                          <span class="value">{{ mission.location }}</span>
+                        </div>
+                      </div>
+                      <div class="detail-description">
+                        <div class="description-header">
+                          <h4>Description</h4>
+                          @if (mission.status === 'InProgress' || mission.status === 'Completed') {
+                            <button (click)="cancelMission(mission)" class="btn-cancel-detail">
+                              <span class="material-icons">cancel</span>
+                              ยกเลิกการเข้าร่วม
+                            </button>
+                          }
+                        </div>
+                        <p>{{ mission.description }}</p>
+
+                        <div class="rewards-section">
+                          <h4>Rewards</h4>
+                          <div class="rewards-list">
+                            @for (reward of mission.rewards; track reward) {
+                              <span class="reward-badge">
+                                <span class="material-icons">card_giftcard</span>
+                                {{ reward }}
+                              </span>
+                            }
+                          </div>
+                        </div>
+
+                        <div class="crew-section">
+                          <h4>Crew Members ({{ mission.crew_members?.length || 0 }} / {{ mission.max_crew || '-' }})</h4>
+                          <div class="crew-list">
+                            @if (mission.crew_members && mission.crew_members.length > 0) {
+                              @for (member of mission.crew_members; track member) {
+                                <div class="crew-item" [class.me]="member === currentUserName">
+                                  <div class="avatar-circle">
+                                    {{ member.charAt(0) }}
+                                  </div>
+                                  <div class="crew-name">
+                                    {{ member }}
+                                  </div>
+                                  @if (member === currentUserName) {
+                                    <span class="me-label">คุณ</span>
+                                  }
+                                </div>
+                              }
+                            } @else {
+                              <div class="crew-empty">
+                                ยังไม่มีใครเข้าร่วมภารกิจนี้
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="no-missions">
+      <p>No missions found</p>
+    </div>
+  }
+</div>

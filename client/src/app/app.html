@@ -1,0 +1,47 @@
+<div class="container">
+  <!-- Gear Loading Screen -->
+  <div class="custom-loading-screen" *ngIf="isLoading()">
+    <div class="gearbox">
+      <div class="overlay"></div>
+      <div class="gear one">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="gear-inner"></div>
+      </div>
+      <div class="gear two">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="gear-inner"></div>
+      </div>
+      <div class="gear three">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="gear-inner"></div>
+      </div>
+      <div class="gear four large">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="gear-inner"></div>
+      </div>
+    </div>
+    <h1 class="loading-text">Loading...</h1>
+  </div>
+
+  <!-- Global Interactive Liquid Gradient Background -->
+  <div id="global-liquid-gradient-container"></div>
+  
+  <app-navbar></app-navbar>
+  <div class="content">
+    <router-outlet></router-outlet>
+  </div>
+  
+  <!-- Custom Cursor -->
+  <div class="custom-cursor" id="customCursor"></div>
+</div>

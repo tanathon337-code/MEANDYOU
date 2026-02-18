@@ -1,0 +1,135 @@
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 2rem;
+    margin-top: 0;
+
+    // Liquid Gradient Container
+    #liquid-gradient-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    mat-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(15px);
+        border-radius: 30px;
+        padding: 3rem;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 450px;
+        margin-top: 0;
+    }
+
+    h3 {
+        margin: 0;
+        padding: 0;
+        margin-bottom: 1em;
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 2rem;
+    }
+
+    .error-container {
+        background-color: rgba(255, 235, 238, 0.8);
+        border: 1px solid #ffcdd2;
+        padding: 10px;
+        border-radius: 12px;
+        margin-bottom: 1.5em;
+        text-align: center;
+    }
+
+    .error {
+        color: #d32f2f;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    div.login-spacer,
+    form {
+        width: 300px;
+        min-width: 200px;
+        max-width: 400px;
+    }
+
+    mat-form-field {
+        /* border: 1px solid green; */
+        height: 50px;
+        margin-bottom: 1.2em;
+        display: block;
+    }
+
+    button.blue {
+        font-size: large;
+        width: 100%;
+        background-color: #3448c5;
+        color: rgb(241, 250, 250);
+    }
+
+    button.blue:disabled {
+        background-color: #a1a9d6;
+        color: #d4d9e9;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .toggle {
+        color: #a2abb4;
+        width: 100%;
+        text-align: center;
+        font-size: small;
+    }
+
+    .toggle span {
+        color: #3448c5;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+
+    div.login-spacer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        line-height: 1.375rem;
+        color: #a2abb4;
+        font-family: 300;
+        margin-top: 1em;
+        margin-bottom: 1em;
+
+
+        /* border: 1px solid green; */
+    }
+
+
+    div.login-spacer::after {
+        margin-left: 12px;
+        border-bottom: 1px solid #a2abb4;
+    }
+
+
+    div.login-spacer::before {
+        margin-right: 12px;
+        border-bottom: 1px solid #a2abb4;
+    }
+
+
+    *::before,
+    *::after {
+        flex-grow: 1;
+        height: 1px;
+        content: "";
+        box-sizing: border-box;
+    }
+}

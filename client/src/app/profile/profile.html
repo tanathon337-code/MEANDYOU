@@ -1,0 +1,237 @@
+<div class="profile-container">
+  <div class="interactive-controls">
+    <div class="background-controls">
+      <button class="background-icon-button" (click)="toggleBgSelector()">
+        <span class="material-icons">image</span>
+      </button>
+
+      <div class="background-selector-row" [class.active]="showBgSelector">
+        @for (scheme of schemes; track $index) {
+          <button class="background-thumb preset" (click)="setScheme($index)">
+            @for (color of scheme; track color) {
+              <span class="thumb-color" [style.background]="color"></span>
+            }
+          </button>
+        }
+        <button class="background-thumb advanced" (click)="toggleAdjuster()">
+          <span class="material-icons">tune</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="color-adjuster-panel" [class.active]="showAdjuster"> 
+      <div class="color-adjuster-header"> 
+        <h3 class="color-adjuster-title">Color Adjuster</h3> 
+        <button class="color-adjuster-close" (click)="toggleAdjuster()">×</button> 
+      </div> 
+
+      @for (color of colors; track $index) {
+        <div class="color-picker-group"> 
+          <div class="color-picker-label"> 
+            <span>Color {{ $index + 1 }}</span> 
+          </div> 
+          <div class="color-picker-wrapper"> 
+            <input type="color" class="color-picker-input" [value]="color" (input)="updateColor($index, $event)"> 
+            <input type="text" class="color-value-display" [value]="color" readonly> 
+            <button class="copy-btn" (click)="copyToClipboard(color)">Copy</button> 
+          </div> 
+        </div> 
+      }
+
+      <div class="color-adjuster-actions"> 
+        <button class="export-btn" (click)="exportColors()">Export All Colors</button> 
+      </div> 
+    </div>
+  </div>
+
+  <div class="profile-header">
+    <div class="profile-avatar-container" (click)="fileInput.click()">
+      <div class="profile-avatar">
+        @if (currentUser?.avatar_url) {
+          <img [src]="currentUser?.avatar_url" alt="Profile Picture">
+        } @else {
+          <span>👤</span>
+        }
+      </div>
+      <div class="avatar-overlay">
+        <span class="material-icons">edit</span>
+      </div>
+      <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/gif" style="display: none">
+    </div>
+    <div class="profile-info">
+      <h1>{{ currentUser?.display_name }}</h1>
+      <div class="profile-badge">
+        <span class="profile-status">Active Member</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-content">
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Account Information</h2>
+        <div class='wrapper' (click)="toggleEdit()">
+          <div role='button' [class]="'retro-btn sm ' + (isEditing ? 'danger' : 'info')">
+            <a class='btn'>
+              <span class='btn-inner'>
+                <span class='content-wrapper'>
+                  <span class='btn-content'>
+                    <span class='btn-content-inner'>{{ isEditing ? 'Cancel' : 'Edit' }}</span>
+                  </span>
+                </span>
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      @if (!isEditing) {
+        <div class="info-grid">
+          <div class="info-item">
+            <label>สถาบันการศึกษา</label>
+            <p>{{ currentUser?.institution || 'ยังไม่ได้ระบุ' }}</p>
+          </div>
+          <div class="info-item">
+            <label>ระดับชั้น/ชั้นปี</label>
+            <p>{{ currentUser?.education_level || 'ยังไม่ได้ระบุ' }}</p>
+          </div>
+          <div class="info-item">
+            <label>Member Since</label>
+            <p>February 2026</p>
+          </div>
+          <div class="info-item">
+            <label>Status</label>
+            <p>Active</p>
+          </div>
+        </div>
+      } @else {
+        <div class="edit-form-container">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>สถาบันการศึกษา (โรงเรียน/มหาวิทยาลัย)</label>
+              <input type="text" [(ngModel)]="editForm.institution" placeholder="ระบุชื่อสถาบัน">
+            </div>
+            <div class="form-group">
+              <label>ระดับชั้น/ชั้นปี</label>
+              <select [(ngModel)]="editForm.education_level">
+                <option value="" disabled>เลือกชั้นปี</option>
+                @for (level of educationLevels; track level) {
+                  <option [value]="level">{{ level }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <div class='wrapper' (click)="saveProfile()">
+              <div role='button' class='retro-btn primary'>
+                <a class='btn'>
+                  <span class='btn-inner'>
+                    <span class='content-wrapper'>
+                      <span class='btn-content'>
+                        <span class='btn-content-inner'>บันทึกข้อมูล</span>
+                      </span>
+                    </span>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="profile-section kyosor-section">
+      <div class="section-header">
+        <h2>ปฏิทินภารกิจของฉัน</h2>
+        <div class="section-actions">
+          <div class='wrapper' (click)="showCalendar = !showCalendar">
+            <div role='button' class='retro-btn sm info'>
+              <a class='btn'>
+                <span class='btn-inner'>
+                  <span class='content-wrapper'>
+                    <span class='btn-content'>
+                      <span class='btn-content-inner'>ปฏิทิน</span>
+                    </span>
+                  </span>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (showCalendar) {
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <button class="month-btn" (click)="prevMonth()">
+              <span class="material-icons">chevron_left</span>
+            </button>
+            <h3>{{ currentMonthLabel }}</h3>
+            <button class="month-btn" (click)="nextMonth()">
+              <span class="material-icons">chevron_right</span>
+            </button>
+          </div>
+
+          <div class="calendar-grid">
+            <div class="weekday">อา</div>
+            <div class="weekday">จ</div>
+            <div class="weekday">อ</div>
+            <div class="weekday">พ</div>
+            <div class="weekday">พฤ</div>
+            <div class="weekday">ศ</div>
+            <div class="weekday">ส</div>
+
+            @for (day of calendarDays; track $index) {
+              <div class="calendar-day" [class.empty]="!day.day">
+                @if (day.day) {
+                  <span class="day-number">{{ day.day }}</span>
+                  <div class="mission-names">
+                    @for (m of day.missions; track m.id) {
+                      <div class="mission-name-tag" [class.completed]="m.status === 'Completed'" [title]="m.name">
+                        {{ m.name }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="profile-section">
+      <h2>Activity</h2>
+      <div class="activity-list">
+        <div class="activity-item">
+          <span class="activity-date">Today</span>
+          <p>You logged in to your account</p>
+        </div>
+        <div class="activity-item">
+          <span class="activity-date">Yesterday</span>
+          <p>You updated your profile</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <button class="btn btn-secondary">Change Password</button>
+    </div>
+
+    <div class="back-nav-bottom">
+      <div class='wrapper' routerLink="/">
+        <div role='button' class='retro-btn info'>
+          <a class='btn'>
+            <span class='btn-inner'>
+              <span class='content-wrapper'>
+                <span class='btn-content'>
+                  <span class='btn-content-inner'>ย้อนกลับ</span>
+                </span>
+              </span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

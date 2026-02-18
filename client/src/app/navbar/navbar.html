@@ -1,0 +1,44 @@
+<nav class="navbar-container">
+  <div class="logo-section">
+    <div class="logo-wrapper" routerLink="/">
+      <span class="logo-text">ME</span><span class="logo-accent">YOU</span>
+    </div>
+    @if (isLoggedIn) {
+      <a class="nav-link" routerLink="/missions">Missions</a>
+      <a class="nav-link" routerLink="/my-missions">My Missions</a>
+    }
+  </div>
+  
+  @if (isLoggedIn) {
+  <div class="user-section">
+    <button class="user-button" (click)="toggleMenu()">
+      <span class="user-icon">
+        @if (currentUser?.avatar_url) {
+          <img [src]="currentUser?.avatar_url" alt="Avatar" class="nav-avatar">
+        } @else {
+          👤
+        }
+      </span>
+      <span class="username">{{ currentUser?.display_name }}</span>
+    </button>
+    <div class="menu-dropdown" *ngIf="showMenu">
+      <a class="menu-item" routerLink="/profile" (click)="closeMenu()">Profile</a>
+      <a class="menu-item" routerLink="/logout" (click)="closeMenu()">Logout</a>
+    </div>
+  </div>
+  } @else {
+    <div class='wrapper' routerLink="/login">
+      <div role='button' class='retro-btn sm info'>
+        <a class='btn'>
+          <span class='btn-inner'>
+            <span class='content-wrapper'>
+              <span class='btn-content'>
+                <span class='btn-content-inner'>LOGIN</span>
+              </span>
+            </span>
+          </span>
+        </a>
+      </div>
+    </div>
+  }
+</nav>
