@@ -48,6 +48,7 @@ export class KyosorService {
         date: h.date ? new Date(h.date) : new Date()
       }));
       this.stats.set(parsed);
+      this.cleanupHistory();
     } else {
       this.stats.set({ internal: 0, external: 0, total: 0, history: [] });
     }
@@ -108,6 +109,44 @@ export class KyosorService {
     
     updated.total = updated.internal + updated.external;
     
+    this.stats.set(updated);
+    this.saveStats(updated);
+  }
+
+  private cleanupHistory() {
+    const current = this.stats();
+    const ids = new Set<number>();
+
+    const collectIds = (raw: string | null) => {
+      if (!raw) return;
+      try {
+        const arr = JSON.parse(raw) as any[];
+        arr.forEach(item => {
+          if (item && typeof item.id === 'number') {
+            ids.add(item.id);
+          }
+        });
+      } catch {
+      }
+    };
+
+    collectIds(localStorage.getItem('missions_data'));
+    collectIds(localStorage.getItem('missions_history'));
+
+    if (ids.size === 0) {
+      return;
+    }
+
+    const filteredHistory = current.history.filter(h => ids.has(h.id));
+    if (filteredHistory.length === current.history.length) {
+      return;
+    }
+
+    const updated: KyosorStats = {
+      ...current,
+      history: filteredHistory
+    };
+
     this.stats.set(updated);
     this.saveStats(updated);
   }

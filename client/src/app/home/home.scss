@@ -12,7 +12,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Zen Maru Gothic', 'Kanit', sans-serif;
+  font-family: 'Kanit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-color: var(--jp-paper);
   position: relative;
   min-height: 100vh;
@@ -24,11 +24,11 @@
   }
 }
 
-// New Fonts
-.syne-font { font-family: 'Syne', sans-serif; }
-.montserrat-font { font-family: 'Montserrat', sans-serif; }
-.bebas-font { font-family: 'Bebas Neue', cursive; }
-.space-font { font-family: 'Space Grotesk', sans-serif; }
+// New Fonts (mapped to readable base font)
+.syne-font { font-family: 'Kanit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.montserrat-font { font-family: 'Kanit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.bebas-font { font-family: 'Kanit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.space-font { font-family: 'Kanit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 
 // Liquid Gradient Container
 #liquid-gradient-container {
@@ -155,7 +155,7 @@
   top: 0;
   width: 350px;
   height: 100vh;
-  background: white;
+  background: rgb(255, 255, 255);
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   transition: right 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -173,7 +173,6 @@
     margin-bottom: 2rem;
 
     h3 {
-      font-family: 'Syne', sans-serif;
       margin: 0;
     }
 
@@ -189,7 +188,6 @@
     margin-bottom: 1.5rem;
 
     .color-picker-label {
-      font-family: 'Montserrat', sans-serif;
       font-size: 0.9rem;
       margin-bottom: 0.5rem;
       color: var(--jp-gray);
@@ -236,7 +234,7 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Kanit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     margin-top: 1rem;
   }
 }
@@ -245,14 +243,14 @@
 
 // Hero Section Updates
 .hero-section {
-  background: rgba(255, 255, 255, 0.7); // Glassmorphism effect
-  backdrop-filter: blur(10px);
+  background: transparent;
+  backdrop-filter: none;
   color: var(--jp-ink);
   padding: 6rem 2rem;
   border-radius: 40px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
   position: relative;
   overflow: hidden;
   margin-top: 2rem;
@@ -287,7 +285,7 @@
       border-radius: 50px;
       border: none;
       cursor: pointer;
-      font-family: 'Syne', sans-serif;
+      font-family: 'Kanit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-weight: 700;
       font-size: 1.1rem;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -414,7 +412,7 @@
     justify-content: space-between;
     align-items: center;
     padding-top: 1.5rem;
-    border-top: 1px dashed #eee;
+    border-top: 1px dashed #ffffff;
 
     span {
       display: flex;
@@ -438,7 +436,7 @@
 
       &:hover {
         background: var(--jp-ink);
-        color: white;
+        color: rgb(255, 255, 255);
       }
     }
   }
@@ -446,10 +444,115 @@
 
 // Calendar Section
 .calendar-section {
-  background: white;
+  background: rgb(255, 255, 255);
   padding: 4rem;
   border-radius: 40px;
+  border: 1px solid #ffffff;
+}
+
+.calendar-container {
+  background: #fff;
   border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .month-btn {
+      background: none;
+      border: 1px solid #ddd;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #666;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #f5f5f5;
+        color: #3f51b5;
+        border-color: #3f51b5;
+      }
+    }
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+
+    .weekday {
+      text-align: center;
+      font-weight: 600;
+      color: #999;
+      font-size: 0.8rem;
+      padding-bottom: 8px;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      position: relative;
+      min-height: 45px;
+
+      &.empty {
+        border: none;
+      }
+
+      .day-number {
+        font-size: 0.85rem;
+        color: #555;
+      }
+
+      .mission-names {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        width: 100%;
+        overflow: hidden;
+
+        .mission-name-tag {
+          font-size: 0.65rem;
+          padding: 1px 4px;
+          background: #e3f2fd;
+          color: #1565c0;
+          border-radius: 3px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: center;
+          border: 1px solid #bbdefb;
+
+          &.completed {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-color: #c8e6c9;
+          }
+        }
+      }
+    }
+  }
 }
 
 .calendar-wrapper {
@@ -470,7 +573,7 @@
     }
 
     .btn-nav {
-      background: var(--jp-paper);
+      background: var(--jp-ink);
       border: none;
       width: 50px;
       height: 50px;
@@ -480,10 +583,11 @@
       align-items: center;
       justify-content: center;
       transition: all 0.3s;
+      color: rgb(255, 255, 255);
 
       &:hover {
-        background: var(--jp-sakura);
-        color: white;
+        background: #000;
+        color: rgb(255, 255, 255);
       }
     }
   }
@@ -513,7 +617,7 @@
       transition: all 0.3s;
 
       &:not(.empty):hover {
-        background: white;
+        background: rgb(255, 255, 255);
         box-shadow: 0 10px 20px rgba(0,0,0,0.05);
         transform: scale(1.02);
       }
@@ -608,7 +712,7 @@
     border: 1px solid transparent;
 
     &:hover {
-      background: white;
+      background: rgb(255, 255, 255);
       border-color: var(--jp-sakura);
       transform: translateX(10px);
     }

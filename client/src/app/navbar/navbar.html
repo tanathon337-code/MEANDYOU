@@ -6,11 +6,42 @@
     @if (isLoggedIn) {
       <a class="nav-link" routerLink="/missions">Missions</a>
       <a class="nav-link" routerLink="/my-missions">My Missions</a>
+      <a class="nav-link" routerLink="/history">History</a>
     }
   </div>
   
   @if (isLoggedIn) {
   <div class="user-section">
+    <button class="theme-toggle-button" (click)="toggleTheme()">
+      <span class="material-icons">
+        {{ isDarkMode ? 'dark_mode' : 'light_mode' }}
+      </span>
+    </button>
+    <button class="bell-button" (click)="toggleNotifications()">
+      <span class="bell-icon">🔔</span>
+      @if (hasUnreadBadge) {
+        <span class="bell-badge">
+          {{ unreadNotifications > 9 ? '9+' : unreadNotifications }}
+        </span>
+      }
+    </button>
+    <div class="notification-dropdown" *ngIf="showNotifications">
+      <div class="notification-header">แจ้งเตือนภารกิจ</div>
+      <div *ngIf="notifications.length === 0" class="notification-empty">
+        ยังไม่มีภารกิจที่ใกล้ถึงกำหนด
+      </div>
+      <div *ngFor="let note of notifications" class="notification-item">
+        <div class="notification-title">{{ note.name }}</div>
+        <div class="notification-meta">
+          <span class="notification-days">
+            {{ note.daysLeft === 0 ? 'วันนี้ถึงกำหนด' : 'อีก ' + note.daysLeft + ' วัน' }}
+          </span>
+          <span class="notification-date">
+            {{ note.date | date: 'dd/MM/yyyy' }}
+          </span>
+        </div>
+      </div>
+    </div>
     <button class="user-button" (click)="toggleMenu()">
       <span class="user-icon">
         @if (currentUser?.avatar_url) {
@@ -23,6 +54,7 @@
     </button>
     <div class="menu-dropdown" *ngIf="showMenu">
       <a class="menu-item" routerLink="/profile" (click)="closeMenu()">Profile</a>
+      <a class="menu-item" routerLink="/friends" (click)="closeMenu()">Friends</a>
       <a class="menu-item" routerLink="/logout" (click)="closeMenu()">Logout</a>
     </div>
   </div>

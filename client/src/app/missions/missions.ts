@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 declare var THREE: any;
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,7 @@ export interface Mission {
   chief?: string;
   crew_count: number;
   crew_members?: string[];
+  pending_members?: string[];
   max_crew: number;
   allow_join?: boolean;
   mission_date?: Date;
@@ -36,7 +37,7 @@ export interface MissionFilter {
 @Component({
   selector: 'app-missions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './missions.html',
   styleUrl: './missions.scss',
 })
@@ -62,13 +63,16 @@ export class Missions implements OnInit, OnDestroy {
   private kyosorService = inject(KyosorService);
   filter: MissionFilter = {}
   missions: Mission[] = []
+  historyMissions: Mission[] = []
   filteredMissions: Mission[] = []
   isLoading = false
   errorMsg = ''
   searchTerm: string = ''
   statusFilter: string = ''
   expandedMissionId: number | null = null
-  viewMode: 'all' | 'my' = 'all'
+  viewMode: 'all' | 'my' | 'history' = 'all'
+  private readonly STORAGE_KEY = 'missions_data'
+  private readonly HISTORY_KEY = 'missions_history'
 
   // ... (existing code)
 
@@ -113,7 +117,6 @@ export class Missions implements OnInit, OnDestroy {
     alert('Exported all colors to clipboard!');
   }
 
-  // Create Mission Form State
   showCreateForm = false
   newMission: Partial<Mission> = {
     name: '',
@@ -129,6 +132,13 @@ export class Missions implements OnInit, OnDestroy {
     allow_join: true
   }
 
+  onPhoneInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '');
+    input.value = digits;
+    this.newMission.phone = digits;
+  }
+
   availableRewards = [
     'น้ำดื่ม',
     'คูปองอาหาร',
@@ -138,6 +148,11 @@ export class Missions implements OnInit, OnDestroy {
 
   get currentUserName(): string {
     return this.passportService.data()?.display_name || 'Anonymous';
+  }
+
+  getMemberAvatar(displayName: string): string | undefined {
+    const user = this.passportService.findUserByDisplayName(displayName);
+    return user?.avatar_url;
   }
 
   toggleCreateForm() {
@@ -163,6 +178,66 @@ export class Missions implements OnInit, OnDestroy {
     }
   }
 
+  private getStorageKey(): string {
+    return this.STORAGE_KEY
+  }
+
+  private getHistoryKey(): string {
+    return this.HISTORY_KEY
+  }
+
+  private saveMissions() {
+    const serialized = this.missions.map(m => ({
+      ...m,
+      mission_date: m.mission_date ? m.mission_date.toISOString() : null,
+      created_at: m.created_at.toISOString(),
+      updated_at: m.updated_at.toISOString()
+    }))
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(serialized))
+  }
+
+  private saveHistory(missions: Mission[]) {
+    const serialized = missions.map(m => ({
+      ...m,
+      mission_date: m.mission_date ? m.mission_date.toISOString() : null,
+      created_at: m.created_at.toISOString(),
+      updated_at: m.updated_at.toISOString()
+    }))
+    localStorage.setItem(this.getHistoryKey(), JSON.stringify(serialized))
+  }
+
+  private loadMissionsFromStorage(): Mission[] | null {
+    const raw = localStorage.getItem(this.getStorageKey())
+    if (!raw) return null
+    try {
+      const parsed = JSON.parse(raw) as any[]
+      return parsed.map(p => ({
+        ...p,
+        mission_date: p.mission_date ? new Date(p.mission_date) : undefined,
+        created_at: new Date(p.created_at),
+        updated_at: new Date(p.updated_at)
+      }))
+    } catch {
+      return null
+    }
+  }
+
+  private loadHistoryFromStorage(): Mission[] | null {
+    const raw = localStorage.getItem(this.getHistoryKey())
+    if (!raw) return null
+    try {
+      const parsed = JSON.parse(raw) as any[]
+      return parsed.map(p => ({
+        ...p,
+        mission_date: p.mission_date ? new Date(p.mission_date) : undefined,
+        created_at: new Date(p.created_at),
+        updated_at: new Date(p.updated_at)
+      }))
+    } catch {
+      return null
+    }
+  }
+
   toggleReward(reward: string) {
     const rewards = this.newMission.rewards || []
     if (rewards.includes(reward)) {
@@ -182,6 +257,20 @@ export class Missions implements OnInit, OnDestroy {
       return
     }
 
+    const missionDate = new Date(this.newMission.mission_date);
+    const today = new Date();
+    const isSameDay =
+      missionDate.getFullYear() === today.getFullYear() &&
+      missionDate.getMonth() === today.getMonth() &&
+      missionDate.getDate() === today.getDate();
+
+    if (isSameDay) {
+      const confirmed = confirm('คุณกำลังสร้างภารกิจที่ต้องทำในวันนี้เลย ต้องการสร้างภารกิจนี้ใช่หรือไม่?');
+      if (!confirmed) {
+        return;
+      }
+    }
+
     const mission: Mission = {
       id: this.missions.length + 1,
       name: this.newMission.name!,
@@ -191,6 +280,7 @@ export class Missions implements OnInit, OnDestroy {
       chief: this.currentUserName,
       crew_count: 0,
       crew_members: [],
+      pending_members: [],
       max_crew: this.newMission.max_crew,
       allow_join: true,
       mission_date: new Date(this.newMission.mission_date),
@@ -203,218 +293,19 @@ export class Missions implements OnInit, OnDestroy {
     }
 
     this.missions = [mission, ...this.missions]
+    this.kyosorService.addHours('internal', 0, {
+      id: mission.id,
+      name: mission.name,
+      date: mission.mission_date || new Date(),
+      status: 'InProgress',
+      isFinished: false
+    })
+    this.saveMissions()
     this.filterMissions()
     this.toggleCreateForm()
     console.log('New mission added:', mission)
   }
 
-  // Chief names mapping
-  chiefNames: { [key: number]: string } = {
-    1: 'Alex Johnson',
-    2: 'Sarah Williams',
-    3: 'Michael Chen',
-    4: 'Emma Davis',
-    5: 'James Wilson',
-    6: 'Lisa Anderson',
-    7: 'David Martinez',
-    8: 'Nicole Taylor',
-    9: 'Robert Brown',
-    10: 'Jessica Miller'
-  }
-
-  // Sample missions data
-  sampleMissions: Mission[] = [
-    {
-      id: 1,
-      name: 'ajs',
-      description: 'Alpha Juliet Sierra',
-      status: 'Open',
-      chief_id: 1,
-      chief: 'Alex Johnson',
-      crew_count: 5,
-      crew_members: ['Player One', 'Crimson Fox', 'Silent Wave', 'Night Owl', 'Silver Arrow'],
-      max_crew: 5,
-      mission_date: new Date('2025-10-25'),
-      created_at: new Date('2025-10-21T08:03'),
-      updated_at: new Date('2025-10-21T08:03'),
-      email: 'alex.j@example.com',
-      phone: '081-234-5678',
-      location: 'Central Plaza, Bangkok',
-      rewards: ['ตั๋วอาหาร', 'น้ำดื่ม'],
-      allow_join: false
-    },
-    {
-      id: 2,
-      name: 'tre',
-      description: 'Training exercise',
-      status: 'Open',
-      chief_id: 2,
-      chief: 'Sarah Williams',
-      crew_count: 0,
-      crew_members: [],
-      max_crew: 4,
-      mission_date: new Date('2025-10-26'),
-      created_at: new Date('2025-10-21T06:23'),
-      updated_at: new Date('2025-10-21T06:23'),
-      email: 'sarah.w@example.com',
-      phone: '082-345-6789',
-      location: 'Siam Square, Bangkok',
-      rewards: ['น้ำดื่ม'],
-      allow_join: true
-    },
-    {
-      id: 3,
-      name: 'lkm',
-      description: 'Logistics management',
-      status: 'Open',
-      chief_id: 3,
-      chief: 'Michael Chen',
-      crew_count: 0,
-      crew_members: [],
-      max_crew: 6,
-      mission_date: new Date('2025-10-27'),
-      created_at: new Date('2025-10-21T06:22'),
-      updated_at: new Date('2025-10-21T06:22'),
-      email: 'michael.c@example.com',
-      phone: '083-456-7890',
-      location: 'Sukhumvit Soi 11, Bangkok',
-      rewards: ['ตั๋วอาหาร', 'น้ำดื่ม'],
-      allow_join: true
-    },
-    {
-      id: 4,
-      name: 'bnw',
-      description: 'Brawler new world',
-      status: 'Open',
-      chief_id: 4,
-      chief: 'Emma Davis',
-      crew_count: 0,
-      crew_members: [],
-      max_crew: 5,
-      mission_date: new Date('2025-10-28'),
-      created_at: new Date('2025-10-21T06:21'),
-      updated_at: new Date('2025-10-21T06:21'),
-      email: 'emma.d@example.com',
-      phone: '084-567-8901',
-      location: 'Chatuchak Park, Bangkok',
-      rewards: ['น้ำดื่ม'],
-      allow_join: true
-    },
-    {
-      id: 5,
-      name: 'bbb',
-      description: 'Blitz battle bonanza',
-      status: 'Open',
-      chief_id: 5,
-      chief: 'James Wilson',
-      crew_count: 0,
-      crew_members: [],
-      max_crew: 8,
-      mission_date: new Date('2025-10-29'),
-      created_at: new Date('2025-10-21T06:09'),
-      updated_at: new Date('2025-10-21T06:09'),
-      email: 'james.w@example.com',
-      phone: '085-678-9012',
-      location: 'Lumpini Park, Bangkok',
-      rewards: ['ตั๋วอาหาร', 'น้ำดื่ม'],
-      allow_join: false
-    },
-    {
-      id: 6,
-      name: 'aaa',
-      description: 'Awesome adventure awaits',
-      status: 'Open',
-      chief_id: 6,
-      chief: 'Lisa Anderson',
-      crew_count: 0,
-      crew_members: [],
-      max_crew: 10,
-      mission_date: new Date('2025-10-30'),
-      created_at: new Date('2025-10-21T06:06'),
-      updated_at: new Date('2025-10-21T06:06'),
-      email: 'lisa.a@example.com',
-      phone: '086-789-0123',
-      location: 'Icon Siam, Bangkok',
-      rewards: ['ตั๋วอาหาร'],
-      allow_join: true
-    },
-    {
-      id: 7,
-      name: 'crystal-quest',
-      description: 'Find the legendary crystal',
-      status: 'Open',
-      chief_id: 7,
-      chief: 'David Martinez',
-      crew_count: 2,
-      crew_members: ['Sky Wanderer', 'Iron Heart'],
-      max_crew: 6,
-      mission_date: new Date('2025-10-20'),
-      created_at: new Date('2025-10-20T10:15'),
-      updated_at: new Date('2025-10-20T10:15'),
-      email: 'david.m@example.com',
-      phone: '087-890-1234',
-      location: 'Grand Palace, Bangkok',
-      rewards: ['ตั๋วอาหาร', 'เข็มกลัดที่ระลึก'],
-      allow_join: true
-    },
-    {
-      id: 8,
-      name: 'shadow-hunt',
-      description: 'Eliminate the shadow creatures',
-      status: 'Open',
-      chief_id: 8,
-      chief: 'Nicole Taylor',
-      crew_count: 5,
-      crew_members: ['Aurora', 'Shadow Wolf', 'Neon Rider', 'Star Runner', 'Blue Comet'],
-      max_crew: 5,
-      mission_date: new Date('2025-10-19'),
-      created_at: new Date('2025-10-19T14:30'),
-      updated_at: new Date('2025-10-21T08:00'),
-      email: 'nicole.t@example.com',
-      phone: '088-901-2345',
-      location: 'Wat Arun, Bangkok',
-      rewards: ['ตั๋วอาหาร', 'น้ำดื่ม'],
-      allow_join: true
-    },
-    {
-      id: 9,
-      name: 'dragon-slayer',
-      description: 'Face the ancient dragon',
-      status: 'Open',
-      chief_id: 9,
-      chief: 'Robert Brown',
-      crew_count: 1,
-      crew_members: ['Lone Dragon'],
-      max_crew: 3,
-      mission_date: new Date('2025-10-18'),
-      created_at: new Date('2025-10-18T09:45'),
-      updated_at: new Date('2025-10-18T09:45'),
-      email: 'robert.b@example.com',
-      phone: '089-012-3456',
-      location: 'Khao San Road, Bangkok',
-      rewards: ['ประกาศนียบัตร', 'น้ำดื่ม'],
-      allow_join: true
-    },
-    {
-      id: 10,
-      name: 'realm-defense',
-      description: 'Defend the kingdom from invaders',
-      status: 'Open',
-      chief_id: 10,
-      chief: 'Jessica Miller',
-      crew_count: 3,
-      crew_members: ['Vanguard', 'Echo Blade', 'Crystal Wind'],
-      max_crew: 5,
-      mission_date: new Date('2025-10-17'),
-      created_at: new Date('2025-10-17T16:20'),
-      updated_at: new Date('2025-10-17T16:20'),
-      email: 'jessica.m@example.com',
-      phone: '090-123-4567',
-      location: 'Asiatique, Bangkok',
-      rewards: ['น้ำดื่ม'],
-      allow_join: true
-    }
-  ]
 
   ngOnInit() {
     this.setViewModeFromRoute();
@@ -431,18 +322,30 @@ export class Missions implements OnInit, OnDestroy {
     try {
       this.isLoading = true;
       this.errorMsg = '';
-      this.missions = this.sampleMissions.map(m => {
+      const stored = this.loadMissionsFromStorage();
+      const allUsers = this.passportService.getAllUsers();
+      const userNames = new Set(allUsers.map(u => u.display_name));
+      const source = (stored && stored.length ? stored : []).filter(m =>
+        m.chief && userNames.has(m.chief)
+      );
+      this.missions = source.map(m => {
         const crewMembers = m.crew_members || [];
         const maxCrew = m.max_crew || this.defaultMaxCrewPerMission;
         return {
           ...m,
           crew_members: crewMembers,
+          pending_members: m.pending_members || [],
           crew_count: crewMembers.length,
           max_crew: maxCrew,
           status: m.status || 'Open',
           allow_join: m.allow_join ?? true,
         };
       });
+      const historyStored = this.loadHistoryFromStorage();
+      const historySource = (historyStored && historyStored.length ? historyStored : []).filter(m =>
+        m.chief && userNames.has(m.chief)
+      );
+      this.historyMissions = historySource;
       this.filterMissions();
     } catch (error: any) {
       console.error('Error loading missions:', error);
@@ -456,15 +359,18 @@ export class Missions implements OnInit, OnDestroy {
     const path = this.route.snapshot.routeConfig?.path;
     if (path === 'my-missions') {
       this.setViewMode('my');
+    } else if (path === 'history') {
+      this.setViewMode('history');
     } else {
       this.setViewMode('all');
     }
   }
 
   filterMissions() {
-    let filtered = [...this.missions]
+    const source = this.viewMode === 'history' ? this.historyMissions : this.missions
+    let filtered = [...source]
 
-    if (this.viewMode === 'my') {
+    if (this.viewMode === 'my' || this.viewMode === 'history') {
       const userName = this.currentUserName;
       filtered = filtered.filter(mission =>
         mission.chief === userName ||
@@ -479,15 +385,15 @@ export class Missions implements OnInit, OnDestroy {
       )
     }
 
-    // Filter by status
+    // Filter by status (use the same key as display badge)
     if (this.statusFilter) {
-      filtered = filtered.filter(mission => mission.status === this.statusFilter)
+      filtered = filtered.filter(mission => this.getMissionStatusKey(mission) === this.statusFilter)
     }
 
     this.filteredMissions = filtered
   }
 
-  setViewMode(mode: 'all' | 'my') {
+  setViewMode(mode: 'all' | 'my' | 'history') {
     this.viewMode = mode
     this.expandedMissionId = null
     this.filterMissions()
@@ -501,8 +407,53 @@ export class Missions implements OnInit, OnDestroy {
     this.filterMissions()
   }
 
+  getMissionStatusKey(mission: Mission): string {
+    if (mission.chief === this.currentUserName) {
+      return mission.status
+    }
+    if (mission.crew_members?.includes(this.currentUserName)) {
+      return 'Completed'
+    }
+    return mission.status
+  }
+
+  getMissionStatusLabel(mission: Mission): string {
+    const key = this.getMissionStatusKey(mission)
+    if (key === 'Open') {
+      return 'Open'
+    }
+    if (key === 'InProgress') {
+      return 'In Progress'
+    }
+    if (key === 'Completed') {
+      return 'Completed'
+    }
+    return key
+  }
+
+  removeMember(mission: Mission, memberName: string) {
+    if (mission.chief !== this.currentUserName) {
+      return;
+    }
+    if (!mission.crew_members || !mission.crew_members.includes(memberName)) {
+      return;
+    }
+    if (!confirm(`คุณต้องการไล่ ${memberName} ออกจากภารกิจนี้หรือไม่?`)) {
+      return;
+    }
+    mission.crew_members = mission.crew_members.filter(name => name !== memberName);
+    mission.crew_count = mission.crew_members.length;
+    mission.updated_at = new Date();
+    this.saveMissions();
+    this.filterMissions();
+  }
+
   joinMission(mission: Mission) {
     if (mission.status !== 'Open') return;
+    if (mission.chief === this.currentUserName) {
+      alert('คุณไม่สามารถเข้าร่วมภารกิจที่คุณสร้างเองได้');
+      return;
+    }
     if (mission.allow_join === false) {
       alert('ภารกิจนี้ไม่เปิดให้เข้าร่วม');
       return;
@@ -521,7 +472,6 @@ export class Missions implements OnInit, OnDestroy {
     }
     mission.crew_members.push(this.currentUserName);
     mission.crew_count = mission.crew_members.length;
-    mission.status = 'InProgress';
     mission.updated_at = new Date();
 
     this.kyosorService.addHours('internal', 0, {
@@ -532,24 +482,48 @@ export class Missions implements OnInit, OnDestroy {
       isFinished: false
     });
 
+    this.saveMissions();
     this.filterMissions();
   }
 
   cancelMission(mission: Mission) {
-    if (mission.status === 'Open') return;
-    
-    if (confirm(`คุณต้องการยกเลิกภารกิจ ${mission.name} ใช่หรือไม่?`)) {
-      if (mission.crew_members && mission.crew_members.length > 0) {
-        mission.crew_members = mission.crew_members.filter(name => name !== this.currentUserName);
-      }
-      mission.crew_count = Math.max(0, mission.crew_members ? mission.crew_members.length : mission.crew_count - 1);
-      if (mission.crew_count === 0) {
-        mission.status = 'Open';
-      }
-      mission.updated_at = new Date();
-      this.filterMissions();
-      console.log('Mission cancelled:', mission.name);
+    const isPending = mission.pending_members?.includes(this.currentUserName) ?? false;
+    const isCrew = mission.crew_members?.includes(this.currentUserName) ?? false;
+    if (!isPending && !isCrew) return;
+
+    if (!confirm(`คุณต้องการยกเลิกการเข้าร่วมภารกิจ ${mission.name} ใช่หรือไม่?`)) {
+      return;
     }
+
+    if (isPending && mission.pending_members) {
+      mission.pending_members = mission.pending_members.filter(name => name !== this.currentUserName);
+    }
+
+    if (isCrew && mission.crew_members) {
+      mission.crew_members = mission.crew_members.filter(name => name !== this.currentUserName);
+      mission.crew_count = mission.crew_members.length;
+    }
+
+    this.kyosorService.removeHours('internal', 0, mission.id);
+
+    mission.updated_at = new Date();
+    this.saveMissions();
+    this.filterMissions();
+    console.log('Mission cancelled:', mission.name);
+  }
+
+  cancelOwnedMission(mission: Mission) {
+    if (mission.chief !== this.currentUserName) {
+      return;
+    }
+    if (!confirm(`คุณต้องการยกเลิกภารกิจที่คุณสร้างเอง: ${mission.name} ใช่หรือไม่?`)) {
+      return;
+    }
+    this.kyosorService.removeHours('internal', 0, mission.id);
+    this.missions = this.missions.filter(m => m.id !== mission.id);
+    this.saveMissions();
+    this.filterMissions();
+    console.log('Owned mission cancelled and removed:', mission.name);
   }
 
   finishMission(mission: Mission) {
@@ -561,6 +535,18 @@ export class Missions implements OnInit, OnDestroy {
     mission.allow_join = false;
     mission.updated_at = new Date();
 
+    const historyEntry: Mission = {
+      ...mission,
+      status: 'Completed',
+      allow_join: false,
+      updated_at: new Date()
+    }
+    const existingHistory = this.loadHistoryFromStorage() || []
+    const filteredHistory = existingHistory.filter(m => m.id !== historyEntry.id)
+    const newHistory = [historyEntry, ...filteredHistory]
+    this.historyMissions = newHistory
+    this.saveHistory(newHistory)
+
     this.kyosorService.addHours('internal', 3, {
       id: mission.id,
       name: mission.name,
@@ -569,8 +555,10 @@ export class Missions implements OnInit, OnDestroy {
       isFinished: true
     });
 
+    this.missions = this.missions.filter(m => m.id !== mission.id);
+    this.saveMissions();
     this.filterMissions();
-    console.log('Mission finished:', mission.name);
+    console.log('Mission finished and removed:', mission.name);
   }
 
   viewDetail(mission: Mission) {

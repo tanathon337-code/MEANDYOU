@@ -77,6 +77,7 @@
     }
   }
 
+
   .background-thumb {
     border: none;
     padding: 0;
@@ -147,7 +148,6 @@
       margin-bottom: 2rem;
 
       h3 {
-        font-family: 'Syne', sans-serif;
         margin: 0;
       }
 
@@ -165,7 +165,6 @@
       .color-picker-label {
         margin-bottom: 0.5rem;
         font-weight: 600;
-        font-family: 'Montserrat', sans-serif;
         font-size: 0.9rem;
       }
 
@@ -248,7 +247,6 @@
       color: #1a1a1a;
       margin: 0;
       font-weight: 800;
-      font-family: 'Syne', sans-serif;
     }
 
     .create-btn {
@@ -849,6 +847,39 @@
                       padding: 0.4rem 0.8rem;
                       border-radius: 999px;
                       background: #f3f4ff;
+                      
+                      .crew-profile-link {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        flex: 1;
+                        cursor: pointer;
+                      }
+
+                      .btn-kick {
+                        border: none;
+                        outline: none;
+                        padding: 0.2rem 0.6rem;
+                        border-radius: 999px;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        background: #fee2e2;
+                        color: #b91c1c;
+                        transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+                        box-shadow: 0 1px 0 rgba(185, 28, 28, 0.4);
+
+                        &:hover {
+                          background: #fecaca;
+                          transform: translateY(-1px);
+                          box-shadow: 0 2px 0 rgba(185, 28, 28, 0.6);
+                        }
+
+                        &:active {
+                          transform: translateY(0);
+                          box-shadow: 0 0 0 rgba(185, 28, 28, 0.4);
+                        }
+                      }
                     }
 
                     .avatar-circle {
@@ -862,11 +893,29 @@
                       justify-content: center;
                       font-size: 0.85rem;
                       font-weight: 600;
+                      overflow: hidden;
+
+                      img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        border-radius: 50%;
+                        display: block;
+                      }
                     }
 
                     .crew-name {
                       font-size: 0.9rem;
                       color: #333333;
+                      cursor: pointer;
+                      text-decoration: underline;
+                      text-decoration-color: transparent;
+                      transition: color 0.2s ease, text-decoration-color 0.2s ease;
+
+                      &:hover {
+                        color: #1d4ed8;
+                        text-decoration-color: #93c5fd;
+                      }
                     }
 
                     .me-label {
@@ -942,6 +991,7 @@
                   color: #c62828;
                 }
               }
+
             }
 
             &.date-cell {
@@ -1089,6 +1139,21 @@
     }
   }
 
+  .mission-container {
+    display: flex;
+    gap: 20px;
+    padding: 50px;
+    background-color: #f4e4bc;
+  }
 
+  .bullet-card {
+    width: 180px;
+    filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.3));
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: translateY(-10px) rotate(2deg);
+    }
+  }
 
 

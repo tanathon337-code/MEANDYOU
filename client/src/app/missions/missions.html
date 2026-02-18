@@ -44,24 +44,7 @@
     </div>
   </div>
 
-  @if (viewMode === 'my') {
-    <div class="header-section">
-      <div class='wrapper' (click)="toggleCreateForm()">
-        <div role='button' [class]="'retro-btn sm ' + (showCreateForm ? 'danger' : 'primary')">
-          <a class='btn'>
-            <span class='btn-inner'>
-              <span class='content-wrapper'>
-                <span class='btn-content'>
-                  <span class='btn-content-inner'>{{ showCreateForm ? 'Cancel' : 'Create' }}</span>
-                </span>
-              </span>
-            </span>
-          </a>
-        </div>
-      </div>
-    </div>
-
-    @if (showCreateForm) {
+  @if (viewMode === 'my' && showCreateForm) {
       <div class="create-mission-card">
         <h2>สร้างภารกิจใหม่</h2>
         <div class="form-grid">
@@ -75,7 +58,11 @@
           </div>
           <div class="form-group">
             <label>เบอร์โทรศัพท์</label>
-            <input type="text" [(ngModel)]="newMission.phone" placeholder="08x-xxx-xxxx">
+            <input
+              type="tel"
+              [(ngModel)]="newMission.phone"
+              (input)="onPhoneInput($event)"
+              placeholder="กรอกเฉพาะตัวเลข">
           </div>
           <div class="form-group">
             <label>วันที่จัดภารกิจ</label>
@@ -93,23 +80,6 @@
             <label>รายละเอียดภารกิจ</label>
             <textarea [(ngModel)]="newMission.description" placeholder="อธิบายรายละเอียดของภารกิจ..."></textarea>
           </div>
-          <div class="form-group full-width">
-            <label>เลือกรางวัลที่ได้รับ</label>
-            <div class="rewards-selection">
-              @for (reward of availableRewards; track reward) {
-                <div 
-                  class="reward-option" 
-                  [class.selected]="newMission.rewards?.includes(reward)"
-                  (click)="toggleReward(reward)"
-                >
-                  <span class="material-icons">
-                    {{ newMission.rewards?.includes(reward) ? 'check_box' : 'check_box_outline_blank' }}
-                  </span>
-                  {{ reward }}
-                </div>
-              }
-            </div>
-          </div>
         </div>
         <div class="form-actions">
           <div class='wrapper' (click)="addMission()">
@@ -118,7 +88,20 @@
                 <span class='btn-inner'>
                   <span class='content-wrapper'>
                     <span class='btn-content'>
-                      <span class='btn-content-inner'>บันทึกภารกิจ</span>
+                      <span class='btn-content-inner'>Confirm</span>
+                    </span>
+                  </span>
+                </span>
+              </a>
+            </div>
+          </div>
+          <div class='wrapper' (click)="toggleCreateForm()">
+            <div role='button' class='retro-btn danger'>
+              <a class='btn'>
+                <span class='btn-inner'>
+                  <span class='content-wrapper'>
+                    <span class='btn-content'>
+                      <span class='btn-content-inner'>Cancel</span>
                     </span>
                   </span>
                 </span>
@@ -128,7 +111,6 @@
         </div>
       </div>
     }
-  }
 
   <div class="filter-section">
     <div class="filter-box">
@@ -156,6 +138,21 @@
               </a>
             </div>
           </div>
+          @if (viewMode === 'my' && !showCreateForm) {
+            <div class='wrapper' (click)="toggleCreateForm()">
+              <div role='button' class='retro-btn sm primary'>
+                <a class='btn'>
+                  <span class='btn-inner'>
+                    <span class='content-wrapper'>
+                      <span class='btn-content'>
+                        <span class='btn-content-inner'>Create</span>
+                      </span>
+                    </span>
+                  </span>
+                </a>
+              </div>
+            </div>
+          }
         </div>
       </div>
 
@@ -169,7 +166,7 @@
         >
           <option value="">All Status</option>
           <option value="Open">Open</option>
-          <option value="InProgress">InProgress</option>
+          <option value="InProgress">In Progress</option>
           <option value="Completed">Completed</option>
         </select>
       </div>
@@ -212,57 +209,78 @@
                 {{ mission.crew_count }} / {{ mission.max_crew || '-' }}
               </td>
               <td class="status-cell">
-                <span class="status-badge" [ngClass]="'badge-' + mission.status">
-                  {{ mission.status }}
+                <span class="status-badge" [ngClass]="'badge-' + getMissionStatusKey(mission)">
+                  {{ getMissionStatusLabel(mission) }}
                 </span>
               </td>
               <td class="date-cell">{{ mission.created_at | date: 'short' }}</td>
               <td class="action-cell">
                 <div class="action-buttons">
-                  @if (mission.status === 'Open' && mission.allow_join !== false) {
-                    <div class='wrapper' (click)="joinMission(mission)">
-                      <div role='button' class='retro-btn sm primary'>
-                        <a class='btn'>
-                          <span class='btn-inner'>
-                            <span class='content-wrapper'>
-                              <span class='btn-content'>
-                                <span class='btn-content-inner'>Join</span>
+                  @if (viewMode !== 'history') {
+                    @if (
+                      mission.status === 'Open' &&
+                      mission.chief !== currentUserName &&
+                      mission.allow_join !== false &&
+                      !mission.crew_members?.includes(currentUserName)
+                    ) {
+                      <div class='wrapper' (click)="joinMission(mission)">
+                        <div role='button' class='retro-btn sm primary'>
+                          <a class='btn'>
+                            <span class='btn-inner'>
+                              <span class='content-wrapper'>
+                                <span class='btn-content'>
+                                  <span class='btn-content-inner'>Join</span>
+                                </span>
                               </span>
                             </span>
-                          </span>
-                        </a>
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  } @else if (mission.status === 'Completed' && mission.chief === currentUserName) {
-                    <div class='wrapper' (click)="finishMission(mission)">
-                      <div role='button' class='retro-btn sm success'>
-                        <a class='btn'>
-                          <span class='btn-inner'>
-                            <span class='content-wrapper'>
-                              <span class='btn-content'>
-                                <span class='btn-content-inner'>Finish</span>
+                    } @else if (mission.chief === currentUserName && mission.status === 'Open') {
+                      <div class='wrapper' (click)="cancelOwnedMission(mission)">
+                        <div role='button' class='retro-btn sm danger'>
+                          <a class='btn'>
+                            <span class='btn-inner'>
+                              <span class='content-wrapper'>
+                                <span class='btn-content'>
+                                  <span class='btn-content-inner'>Cancel Mission</span>
+                                </span>
                               </span>
                             </span>
-                          </span>
-                        </a>
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  } 
-                  
-                  @if (mission.status === 'InProgress') {
-                    <div class='wrapper' (click)="cancelMission(mission)">
-                      <div role='button' class='retro-btn sm danger'>
-                        <a class='btn'>
-                          <span class='btn-inner'>
-                            <span class='content-wrapper'>
-                              <span class='btn-content'>
-                                <span class='btn-content-inner'>Cancel</span>
+                    } @else if (mission.chief === currentUserName && mission.status === 'InProgress') {
+                      <div class='wrapper' (click)="finishMission(mission)">
+                        <div role='button' class='retro-btn sm success'>
+                          <a class='btn'>
+                            <span class='btn-inner'>
+                              <span class='content-wrapper'>
+                                <span class='btn-content'>
+                                  <span class='btn-content-inner'>Finish</span>
+                                </span>
                               </span>
                             </span>
-                          </span>
-                        </a>
+                          </a>
+                        </div>
                       </div>
-                    </div>
+                    }
+                    
+                    @if (getMissionStatusKey(mission) === 'InProgress') {
+                      <div class='wrapper' (click)="cancelMission(mission)">
+                        <div role='button' class='retro-btn sm danger'>
+                          <a class='btn'>
+                            <span class='btn-inner'>
+                              <span class='content-wrapper'>
+                                <span class='btn-content'>
+                                  <span class='btn-content-inner'>Cancel</span>
+                                </span>
+                              </span>
+                            </span>
+                          </a>
+                        </div>
+                      </div>
+                    }
                   }
 
                   <div class='wrapper' (click)="viewDetail(mission)">
@@ -312,7 +330,7 @@
                       <div class="detail-description">
                         <div class="description-header">
                           <h4>Description</h4>
-                          @if (mission.status === 'InProgress' || mission.status === 'Completed') {
+                          @if (viewMode !== 'history' && (getMissionStatusKey(mission) === 'InProgress' || getMissionStatusKey(mission) === 'Completed')) {
                             <button (click)="cancelMission(mission)" class="btn-cancel-detail">
                               <span class="material-icons">cancel</span>
                               ยกเลิกการเข้าร่วม
@@ -339,14 +357,25 @@
                             @if (mission.crew_members && mission.crew_members.length > 0) {
                               @for (member of mission.crew_members; track member) {
                                 <div class="crew-item" [class.me]="member === currentUserName">
+                                  <div class="crew-profile-link" [routerLink]="['/profile', member]">
                                   <div class="avatar-circle">
-                                    {{ member.charAt(0) }}
+                                    @if (getMemberAvatar(member)) {
+                                      <img [src]="getMemberAvatar(member)" [alt]="member">
+                                    } @else {
+                                      {{ member.charAt(0) }}
+                                    }
                                   </div>
                                   <div class="crew-name">
                                     {{ member }}
                                   </div>
                                   @if (member === currentUserName) {
                                     <span class="me-label">คุณ</span>
+                                  }
+                                  </div>
+                                  @if (mission.chief === currentUserName && member !== mission.chief && mission.status !== 'Completed') {
+                                    <button class="btn-kick" (click)="removeMember(mission, member)">
+                                      ไล่ออก
+                                    </button>
                                   }
                                 </div>
                               }

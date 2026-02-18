@@ -2,18 +2,9 @@ import { Component, OnInit, inject, OnDestroy, PLATFORM_ID } from '@angular/core
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BackgroundService } from '../_services/background-service';
+import { KyosorService, MissionHistory } from '../_services/kyosor-service';
 
 declare var THREE: any;
-
-interface UniversityEvent {
-  id: number;
-  name: string;
-  university: string;
-  date: Date;
-  description: string;
-  type: 'academic' | 'festival' | 'sports' | 'other';
-  location: string;
-}
 
 @Component({
   selector: 'app-home',
@@ -25,6 +16,7 @@ interface UniversityEvent {
 export class Home implements OnInit, OnDestroy {
   platformId = inject(PLATFORM_ID);
   private backgroundService = inject(BackgroundService);
+  private kyosorService = inject(KyosorService);
   
   showAdjuster = false;
   showBgSelector = false;
@@ -38,74 +30,11 @@ export class Home implements OnInit, OnDestroy {
     ['#ffffff', '#f5f5f5', '#e0e0e0', '#f5f5f5', '#ffffff', '#e0e0e0']
   ];
 
-  // Calendar properties
-  currentDate = new Date();
-  calendarDays: any[] = [];
-  monthNames = [
-    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-  ];
-  
-  // Mockup University Events
-  universityEvents: UniversityEvent[] = [
-    {
-      id: 1,
-      name: 'งานเกษตรแฟร์ 2569',
-      university: 'มหาวิทยาลัยเกษตรศาสตร์',
-      date: new Date(2026, 1, 2), // Feb 2, 2026
-      description: 'งานแสดงสินค้าเกษตรและเทคโนโลยีที่ใหญ่ที่สุด',
-      type: 'festival',
-      location: 'วิทยาเขตบางเขน'
-    },
-    {
-      id: 2,
-      name: 'TU Open House 2026',
-      university: 'มหาวิทยาลัยธรรมศาสตร์',
-      date: new Date(2026, 1, 15), // Feb 15, 2026
-      description: 'เปิดบ้านแนะนำคณะและหลักสูตรการศึกษา',
-      type: 'academic',
-      location: 'ศูนย์รังสิต'
-    },
-    {
-      id: 3,
-      name: 'CU-TU Traditional Football',
-      university: 'จุฬาฯ - ธรรมศาสตร์',
-      date: new Date(2026, 1, 20), // Feb 20, 2026
-      description: 'งานฟุตบอลประเพณี จุฬาฯ-ธรรมศาสตร์ ครั้งที่ 76',
-      type: 'sports',
-      location: 'สนามศุภชลาศัย'
-    },
-    {
-      id: 4,
-      name: 'Mahidol Open House',
-      university: 'มหาวิทยาลัยมหิดล',
-      date: new Date(2026, 2, 10), // March 10, 2026
-      description: 'กิจกรรมแนะแนวการศึกษาต่อมหาวิทยาลัยมหิดล',
-      type: 'academic',
-      location: 'วิทยาเขตศาลายา'
-    },
-    {
-      id: 5,
-      name: 'งานลอยกระทงจุฬาฯ',
-      university: 'จุฬาลงกรณ์มหาวิทยาลัย',
-      date: new Date(2026, 10, 24), // Nov 24, 2026
-      description: 'งานเทศกาลลอยกระทงรอบสระน้ำจุฬาฯ',
-      type: 'festival',
-      location: 'สระน้ำจุฬาฯ'
-    },
-    {
-      id: 6,
-      name: 'รับน้องขึ้นดอย 2569',
-      university: 'มหาวิทยาลัยเชียงใหม่',
-      date: new Date(2026, 6, 5), // July 5, 2026
-      description: 'ประเพณีรับน้องขึ้นดอยไปนมัสการพระธาตุดอยสุเทพ',
-      type: 'festival',
-      location: 'มหาวิทยาลัยเชียงใหม่'
-    }
-  ];
+  currentMonth = new Date();
+  calendarDays: { date: Date | null; day: number | null; missions: MissionHistory[] }[] = [];
 
   ngOnInit() {
-    this.generateCalendar();
+    this.buildCalendar();
   }
 
   ngOnDestroy() {
@@ -153,49 +82,47 @@ export class Home implements OnInit, OnDestroy {
     alert('Exported all colors to clipboard!');
   }
 
-  generateCalendar() {
-    const year = this.currentDate.getFullYear();
-    const month = this.currentDate.getMonth();
-    
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-    
-    const daysInMonth = lastDayOfMonth.getDate();
-    const startingDay = firstDayOfMonth.getDay();
-    
-    const days = [];
-    
-    for (let i = 0; i < startingDay; i++) {
-      days.push({ day: null, events: [] });
+  get currentMonthLabel(): string {
+    const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    return `${monthNames[this.currentMonth.getMonth()]} ${this.currentMonth.getFullYear() + 543}`;
+  }
+
+  buildCalendar() {
+    const year = this.currentMonth.getFullYear();
+    const month = this.currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const startWeekday = firstDay.getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const history = this.kyosorService
+      .stats()
+      .history
+      .filter(h => h.name?.toLowerCase() !== 'bnw');
+
+    const days: { date: Date | null; day: number | null; missions: MissionHistory[] }[] = [];
+
+    for (let i = 0; i < startWeekday; i++) {
+      days.push({ date: null, day: null, missions: [] });
     }
-    
-    for (let i = 1; i <= daysInMonth; i++) {
-      const dateStr = new Date(year, month, i).toDateString();
-      const eventsOnDay = this.universityEvents.filter(event => {
-        return new Date(event.date).toDateString() === dateStr;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const missions = history.filter(h => {
+        const hd = new Date(h.date);
+        return hd.getFullYear() === year && hd.getMonth() === month && hd.getDate() === d;
       });
-      
-      days.push({
-        day: i,
-        isToday: i === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear(),
-        events: eventsOnDay
-      });
+      days.push({ date, day: d, missions });
     }
-    
+
     this.calendarDays = days;
   }
 
-  changeMonth(delta: number) {
-    this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + delta, 1);
-    this.generateCalendar();
+  prevMonth() {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
+    this.buildCalendar();
   }
 
-  getEventTypeColor(type: string): string {
-    switch (type) {
-      case 'academic': return '#1890ff';
-      case 'festival': return '#eb2f96';
-      case 'sports': return '#52c41a';
-      default: return '#722ed1';
-    }
+  nextMonth() {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
+    this.buildCalendar();
   }
 }

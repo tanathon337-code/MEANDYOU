@@ -123,82 +123,45 @@
     </div>
   </section>
 
-  <!-- Event Calendar Section -->
+  <!-- Mission Calendar Section -->
   <section class="calendar-section">
     <div class="section-header">
-      <h2>Event Calendar</h2>
-      <p>กิจกรรมมหาวิทยาลัยที่น่าสนใจ</p>
+      <h2>ปฏิทินภารกิจของฉัน</h2>
     </div>
 
-    <div class="calendar-wrapper">
+    <div class="calendar-container">
       <div class="calendar-header">
-        <button (click)="changeMonth(-1)" class="btn-nav">
-          <span class="material-icons">navigate_before</span>
+        <button class="month-btn" (click)="prevMonth()">
+          <span class="material-icons">chevron_left</span>
         </button>
-        <h3>{{ currentDate.getFullYear() + 543 }} {{ monthNames[currentDate.getMonth()] }}</h3>
-        <button (click)="changeMonth(1)" class="btn-nav">
-          <span class="material-icons">navigate_next</span>
+        <h3>{{ currentMonthLabel }}</h3>
+        <button class="month-btn" (click)="nextMonth()">
+          <span class="material-icons">chevron_right</span>
         </button>
       </div>
 
       <div class="calendar-grid">
-        <div class="day-name sun">อา.</div>
-        <div class="day-name">จ.</div>
-        <div class="day-name">อ.</div>
-        <div class="day-name">พ.</div>
-        <div class="day-name">พฤ.</div>
-        <div class="day-name">ศ.</div>
-        <div class="day-name sat">ส.</div>
+        <div class="weekday">อา</div>
+        <div class="weekday">จ</div>
+        <div class="weekday">อ</div>
+        <div class="weekday">พ</div>
+        <div class="weekday">พฤ</div>
+        <div class="weekday">ศ</div>
+        <div class="weekday">ส</div>
 
-        @for (item of calendarDays; track $index) {
-          <div class="calendar-day" 
-               [class.empty]="!item.day" 
-               [class.today]="item.isToday"
-               [class.has-events]="item.events && item.events.length > 0">
-            <span class="day-number">{{ item.day }}</span>
-            <div class="day-events">
-              @for (event of item.events; track event.id) {
-                <div class="event-dot" 
-                     [style.background-color]="getEventTypeColor(event.type)"
-                     [title]="event.name">
-                </div>
-              }
-            </div>
+        @for (day of calendarDays; track $index) {
+          <div class="calendar-day" [class.empty]="!day.day">
+            @if (day.day) {
+              <span class="day-number">{{ day.day }}</span>
+              <div class="mission-names">
+                @for (m of day.missions; track m.id) {
+                  <div class="mission-name-tag" [class.completed]="m.status === 'Completed'" [title]="m.name">
+                    {{ m.name }}
+                  </div>
+                }
+              </div>
+            }
           </div>
-        }
-      </div>
-
-      <div class="calendar-legend">
-        <div class="legend-item"><span class="dot academic"></span> วิชาการ</div>
-        <div class="legend-item"><span class="dot festival"></span> เทศกาล</div>
-        <div class="legend-item"><span class="dot sports"></span> กีฬา</div>
-        <div class="legend-item"><span class="dot other"></span> อื่นๆ</div>
-      </div>
-    </div>
-
-    <!-- Upcoming Events List -->
-    <div class="upcoming-events">
-      <h4><span class="material-icons">event_note</span> กิจกรรมที่กำลังจะมาถึง</h4>
-      <div class="event-list">
-        @for (event of universityEvents; track event.id) {
-          @if (event.date >= currentDate) {
-            <div class="event-item">
-              <div class="event-date">
-                <span class="day">{{ event.date.getDate() }}</span>
-                <span class="month">{{ monthNames[event.date.getMonth()].substring(0, 3) }}</span>
-              </div>
-              <div class="event-info">
-                <h5>{{ event.name }}</h5>
-                <p class="uni-name">{{ event.university }}</p>
-                <p class="loc"><span class="material-icons">location_on</span> {{ event.location }}</p>
-              </div>
-              <div class="event-type-label" [style.border-left-color]="getEventTypeColor(event.type)">
-                {{ event.type === 'academic' ? 'วิชาการ' : 
-                   event.type === 'festival' ? 'เทศกาล' : 
-                   event.type === 'sports' ? 'กีฬา' : 'อื่นๆ' }}
-              </div>
-            </div>
-          }
         }
       </div>
     </div>

@@ -4,8 +4,10 @@ import { Injectable, signal } from '@angular/core';
   providedIn: 'root'
 })
 export class BackgroundService {
-  // Default colors
   private defaultColors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#F7FFF7', '#FF9F1C'];
+  private darkColors = ['#0f172a', '#1f2937', '#4b5563', '#0b1120', '#020617', '#111827'];
+  private readonly THEME_KEY = 'app_theme';
+  theme = signal<'light' | 'dark'>(this.loadInitialTheme());
   
   // Signals for state management
   colors = signal<string[]>([...this.defaultColors]);
@@ -17,7 +19,52 @@ export class BackgroundService {
   private animationId: any;
   private THREE: any;
 
-  constructor() {}
+  constructor() {
+    this.applyThemeClass(this.theme());
+    if (this.theme() === 'dark') {
+      this.updateColors(this.darkColors);
+    } else {
+      this.updateColors(this.defaultColors);
+    }
+  }
+
+  private loadInitialTheme(): 'light' | 'dark' {
+    if (typeof window === 'undefined') {
+      return 'light';
+    }
+    const stored = localStorage.getItem(this.THEME_KEY);
+    if (stored === 'light' || stored === 'dark') {
+      return stored;
+    }
+    return 'light';
+  }
+
+  private applyThemeClass(theme: 'light' | 'dark') {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    const root = document.documentElement;
+    root.classList.remove('theme-light', 'theme-dark');
+    root.classList.add(theme === 'dark' ? 'theme-dark' : 'theme-light');
+  }
+
+  setTheme(theme: 'light' | 'dark') {
+    this.theme.set(theme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(this.THEME_KEY, theme);
+    }
+    this.applyThemeClass(theme);
+    if (theme === 'dark') {
+      this.updateColors(this.darkColors);
+    } else {
+      this.updateColors(this.defaultColors);
+    }
+  }
+
+  toggleTheme() {
+    const next = this.theme() === 'dark' ? 'light' : 'dark';
+    this.setTheme(next);
+  }
 
   init(container: HTMLElement, THREE_LIB: any) {
     this.THREE = THREE_LIB;
