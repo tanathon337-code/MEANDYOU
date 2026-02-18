@@ -26,7 +26,6 @@ export interface Mission {
   email?: string;
   phone?: string;
   location?: string;
-  rewards?: string[];
 }
 
 export interface MissionFilter {
@@ -125,7 +124,6 @@ export class Missions implements OnInit, OnDestroy {
     phone: '',
     location: '',
     mission_date: undefined,
-    rewards: [],
     crew_members: [],
     crew_count: 0,
     max_crew: 5,
@@ -138,13 +136,6 @@ export class Missions implements OnInit, OnDestroy {
     input.value = digits;
     this.newMission.phone = digits;
   }
-
-  availableRewards = [
-    'น้ำดื่ม',
-    'คูปองอาหาร',
-    'ของที่ระลึก',
-    'ประกาศนียบัตร'
-  ]
 
   get currentUserName(): string {
     return this.passportService.data()?.display_name || 'Anonymous';
@@ -170,7 +161,6 @@ export class Missions implements OnInit, OnDestroy {
       phone: '',
       location: '',
       mission_date: undefined,
-      rewards: [],
       crew_members: [],
       crew_count: 0,
       max_crew: 5,
@@ -211,12 +201,15 @@ export class Missions implements OnInit, OnDestroy {
     if (!raw) return null
     try {
       const parsed = JSON.parse(raw) as any[]
-      return parsed.map(p => ({
-        ...p,
-        mission_date: p.mission_date ? new Date(p.mission_date) : undefined,
-        created_at: new Date(p.created_at),
-        updated_at: new Date(p.updated_at)
-      }))
+      return parsed.map(p => {
+        const { rewards, ...rest } = p
+        return {
+          ...rest,
+          mission_date: p.mission_date ? new Date(p.mission_date) : undefined,
+          created_at: new Date(p.created_at),
+          updated_at: new Date(p.updated_at)
+        }
+      })
     } catch {
       return null
     }
@@ -227,23 +220,17 @@ export class Missions implements OnInit, OnDestroy {
     if (!raw) return null
     try {
       const parsed = JSON.parse(raw) as any[]
-      return parsed.map(p => ({
-        ...p,
-        mission_date: p.mission_date ? new Date(p.mission_date) : undefined,
-        created_at: new Date(p.created_at),
-        updated_at: new Date(p.updated_at)
-      }))
+      return parsed.map(p => {
+        const { rewards, ...rest } = p
+        return {
+          ...rest,
+          mission_date: p.mission_date ? new Date(p.mission_date) : undefined,
+          created_at: new Date(p.created_at),
+          updated_at: new Date(p.updated_at)
+        }
+      })
     } catch {
       return null
-    }
-  }
-
-  toggleReward(reward: string) {
-    const rewards = this.newMission.rewards || []
-    if (rewards.includes(reward)) {
-      this.newMission.rewards = rewards.filter(r => r !== reward)
-    } else {
-      this.newMission.rewards = [...rewards, reward]
     }
   }
 
@@ -288,8 +275,7 @@ export class Missions implements OnInit, OnDestroy {
       updated_at: new Date(),
       email: this.newMission.email,
       phone: this.newMission.phone,
-      location: this.newMission.location,
-      rewards: this.newMission.rewards
+      location: this.newMission.location
     }
 
     this.missions = [mission, ...this.missions]

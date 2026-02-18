@@ -522,13 +522,13 @@
     .filter-box {
       display: flex;
       gap: 2rem;
-      align-items: flex-start;
+      align-items: flex-end;
       flex-wrap: wrap;
     }
 
     .search-box {
-      flex: 1;
-      min-width: 300px;
+      flex: 1.2;
+      min-width: 360px;
 
       label {
         display: block;
@@ -540,15 +540,15 @@
 
       .search-input-group {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.75rem;
 
         .search-input {
           flex: 1;
-          padding: 0.75rem 1rem;
+          padding: 0.95rem 1.2rem;
           border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 0.95rem;
-          transition: border-color 0.3s ease;
+          border-radius: 10px;
+          font-size: 1rem;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 
           &:focus {
             outline: none;
@@ -562,7 +562,7 @@
         }
 
         .search-button {
-          padding: 0.75rem 1.5rem;
+          padding: 0.95rem 1.8rem;
           background: #667eea;
           color: white;
           border: none;
@@ -586,8 +586,8 @@
     }
 
     .status-box {
-      flex: 0 1 auto;
-      min-width: 200px;
+      flex: 0 1 260px;
+      min-width: 220px;
 
       label {
         display: block;
@@ -599,14 +599,14 @@
 
       .status-select {
         width: 100%;
-        padding: 0.75rem 1rem;
+        padding: 0.95rem 1.2rem;
         border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 0.95rem;
+        border-radius: 10px;
+        font-size: 1rem;
         background: white;
         color: #333;
         cursor: pointer;
-        transition: border-color 0.3s ease;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 
         &:focus {
           outline: none;
@@ -799,36 +799,6 @@
                     line-height: 1.6;
                     color: #666;
                     margin-bottom: 1.5rem;
-                  }
-
-                  .rewards-section {
-                    h4 {
-                      margin-bottom: 0.75rem;
-                      font-size: 1rem;
-                    }
-
-                    .rewards-list {
-                      display: flex;
-                      gap: 0.75rem;
-                      flex-wrap: wrap;
-
-                      .reward-badge {
-                        display: flex;
-                        align-items: center;
-                        gap: 0.4rem;
-                        padding: 0.4rem 0.8rem;
-                        background: #fff3e0;
-                        color: #e65100;
-                        border-radius: 20px;
-                        font-size: 0.85rem;
-                        font-weight: 600;
-                        border: 1px solid #ffe0b2;
-
-                        .material-icons {
-                          font-size: 1.1rem;
-                        }
-                      }
-                    }
                   }
 
                   .crew-section {
@@ -1092,6 +1062,96 @@
     }
   }
 
+@media (max-width: 768px) {
+  .missions-container {
+    padding: 1rem;
+
+    .header-section {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .create-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .create-mission-card {
+      padding: 1.5rem 1.25rem;
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .filter-section {
+      padding: 1.5rem 1.25rem;
+
+      .filter-box {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+      }
+
+      .search-box {
+        min-width: 0;
+
+        .search-input-group {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .search-button {
+          width: 100%;
+          text-align: center;
+        }
+      }
+
+      .status-box {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+    }
+
+    .missions-table-wrapper {
+      max-height: none;
+      overflow-x: auto;
+
+      .missions-table {
+        font-size: 0.85rem;
+
+        th,
+        td {
+          padding: 0.6rem 0.5rem;
+        }
+      }
+
+      .mission-detail-content {
+        .detail-grid {
+          grid-template-columns: 1fr;
+          gap: 1.2rem;
+        }
+      }
+    }
+
+    .interactive-controls {
+      right: 1rem;
+      bottom: 1rem;
+    }
+
+    .color-adjuster-panel {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+}
+
   .error-message {
     padding: 1rem;
     background: #ffebee;
@@ -1101,6 +1161,44 @@
 
     p {
     margin: 0;
+  }
+}
+
+html.theme-dark {
+  .missions-container {
+    .filter-section {
+      background: rgba(15, 23, 42, 0.95);
+      border-color: rgba(148, 163, 184, 0.5);
+
+      .search-box {
+        label {
+          color: #e5e7eb;
+        }
+
+        .search-input {
+          background: #ffffff;
+          color: #111827 !important;
+          border-color: #e5e7eb;
+          caret-color: #111827;
+
+          &::placeholder {
+            color: #6b7280;
+          }
+        }
+      }
+
+      .status-box {
+        label {
+          color: #e5e7eb;
+        }
+
+        .status-select {
+          background: #ffffff;
+          color: #111827 !important;
+          border-color: #e5e7eb;
+        }
+      }
+    }
   }
 }
 

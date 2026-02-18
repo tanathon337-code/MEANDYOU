@@ -339,18 +339,6 @@
                         </div>
                         <p>{{ mission.description }}</p>
 
-                        <div class="rewards-section">
-                          <h4>Rewards</h4>
-                          <div class="rewards-list">
-                            @for (reward of mission.rewards; track reward) {
-                              <span class="reward-badge">
-                                <span class="material-icons">card_giftcard</span>
-                                {{ reward }}
-                              </span>
-                            }
-                          </div>
-                        </div>
-
                         <div class="crew-section">
                           <h4>Crew Members ({{ mission.crew_members?.length || 0 }} / {{ mission.max_crew || '-' }})</h4>
                           <div class="crew-list">
