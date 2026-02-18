@@ -457,6 +457,9 @@ export class Missions implements OnInit, OnDestroy {
       return;
     }
     mission.crew_members.push(this.currentUserName);
+    if (mission.status === 'Open') {
+      mission.status = 'InProgress';
+    }
     mission.crew_count = mission.crew_members.length;
     mission.updated_at = new Date();
 

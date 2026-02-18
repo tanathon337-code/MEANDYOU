@@ -236,7 +236,9 @@
                           </a>
                         </div>
                       </div>
-                    } @else if (mission.chief === currentUserName && mission.status === 'Open') {
+                    }
+
+                    @if (mission.chief === currentUserName && mission.status === 'Open') {
                       <div class='wrapper' (click)="cancelOwnedMission(mission)">
                         <div role='button' class='retro-btn sm danger'>
                           <a class='btn'>
@@ -250,7 +252,9 @@
                           </a>
                         </div>
                       </div>
-                    } @else if (mission.chief === currentUserName && mission.status === 'InProgress') {
+                    }
+
+                    @if (mission.chief === currentUserName && mission.status !== 'Completed') {
                       <div class='wrapper' (click)="finishMission(mission)">
                         <div role='button' class='retro-btn sm success'>
                           <a class='btn'>
