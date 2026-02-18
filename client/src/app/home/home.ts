@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BackgroundService } from '../_services/background-service';
 import { KyosorService, MissionHistory } from '../_services/kyosor-service';
+import { PassportService } from '../_services/passport-service';
 
 declare var THREE: any;
 
@@ -17,6 +18,7 @@ export class Home implements OnInit, OnDestroy {
   platformId = inject(PLATFORM_ID);
   private backgroundService = inject(BackgroundService);
   private kyosorService = inject(KyosorService);
+  private passportService = inject(PassportService);
   
   showAdjuster = false;
   showBgSelector = false;
@@ -32,9 +34,11 @@ export class Home implements OnInit, OnDestroy {
 
   currentMonth = new Date();
   calendarDays: { date: Date | null; day: number | null; missions: MissionHistory[] }[] = [];
+  recommendedMissions: { id: number; name: string; description: string; location?: string; tag: string }[] = [];
 
   ngOnInit() {
     this.buildCalendar();
+    this.loadRecommendedMissions();
   }
 
   ngOnDestroy() {
@@ -80,6 +84,40 @@ export class Home implements OnInit, OnDestroy {
     const text = this.colors.join(', ');
     navigator.clipboard.writeText(text);
     alert('Exported all colors to clipboard!');
+  }
+
+  private loadRecommendedMissions() {
+    if (!isPlatformBrowser(this.platformId)) {
+      this.recommendedMissions = [];
+      return;
+    }
+    const raw = localStorage.getItem('missions_data');
+    if (!raw) {
+      this.recommendedMissions = [];
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as any[];
+      const allUsers = this.passportService.getAllUsers();
+      const userNames = new Set(allUsers.map(u => u.display_name));
+      const validMissions = parsed.filter(m => m && m.chief && userNames.has(m.chief));
+      const sorted = validMissions
+        .map(m => ({
+          ...m,
+          created_at: m.created_at ? new Date(m.created_at) : new Date()
+        }))
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+      const top = sorted.slice(0, 3);
+      this.recommendedMissions = top.map(m => ({
+        id: m.id,
+        name: m.name,
+        description: m.description,
+        location: m.location,
+        tag: m.status || 'Open'
+      }));
+    } catch {
+      this.recommendedMissions = [];
+    }
   }
 
   get currentMonthLabel(): string {

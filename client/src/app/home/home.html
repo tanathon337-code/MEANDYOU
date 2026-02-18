@@ -92,35 +92,28 @@
       <h2>ภารกิจแนะนำ</h2>
       <a routerLink="/missions" class="view-all">ดูทั้งหมด <span class="material-icons">east</span></a>
     </div>
-    <div class="mission-grid">
-      <div class="mission-card-mock">
-        <div class="card-tag">NEW</div>
-        <h3>สอนหนังสือเด็กประถม</h3>
-        <p>ช่วยสอนวิชาภาษาอังกฤษและคณิตศาสตร์ให้กับน้องๆ ในบรรยากาศที่เรียบง่าย</p>
-        <div class="card-footer">
-          <span><span class="material-icons">place</span> ธรรมศาสตร์</span>
-          <button class="btn-join" routerLink="/missions">เข้าร่วม</button>
-        </div>
+    @if (recommendedMissions.length > 0) {
+      <div class="mission-grid">
+        @for (mission of recommendedMissions; track mission.id) {
+          <div class="mission-card-mock">
+            <div class="card-tag">{{ mission.tag }}</div>
+            <h3>{{ mission.name }}</h3>
+            <p>{{ mission.description }}</p>
+            <div class="card-footer">
+              <span>
+                <span class="material-icons">place</span>
+                {{ mission.location || 'ยังไม่ระบุสถานที่' }}
+              </span>
+              <button class="btn-join" routerLink="/missions">เข้าร่วม</button>
+            </div>
+          </div>
+        }
       </div>
-      <div class="mission-card-mock">
-        <div class="card-tag">HOT</div>
-        <h3>ปลูกป่าชายเลน</h3>
-        <p>กิจกรรมอนุรักษ์ธรรมชาติสไตล์รักษ์โลก ร่วมกันสร้างพื้นที่สีเขียว</p>
-        <div class="card-footer">
-          <span><span class="material-icons">place</span> สมุทรปราการ</span>
-          <button class="btn-join" routerLink="/missions">เข้าร่วม</button>
-        </div>
-      </div>
-      <div class="mission-card-mock">
-        <div class="card-tag">INFO</div>
-        <h3>รับบริจาคโลหิต</h3>
-        <p>แบ่งปันความรักผ่านการบริจาคโลหิต ณ ศูนย์บริการโลหิตแห่งชาติ</p>
-        <div class="card-footer">
-          <span><span class="material-icons">place</span> สภากาชาดไทย</span>
-          <button class="btn-join" routerLink="/missions">เข้าร่วม</button>
-        </div>
-      </div>
-    </div>
+    } @else {
+      <p style="color: var(--jp-gray); font-size: 0.9rem;">
+        ยังไม่มีภารกิจที่ถูกสร้างจากผู้ใช้ในขณะนี้
+      </p>
+    }
   </section>
 
   <!-- Mission Calendar Section -->
